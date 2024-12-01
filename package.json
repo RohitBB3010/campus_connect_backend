@@ -1,0 +1,19 @@
+{
+  "name": "campus_connect_backend",
+  "version": "1.0.0",
+  "description": "Backend for the campus connect project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RohitBB3010/campus_connect_backend.git"
+  },
+  "author": "Rohit B. Bhandwalkar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RohitBB3010/campus_connect_backend/issues"
+  },
+  "homepage": "https://github.com/RohitBB3010/campus_connect_backend#readme"
+}
