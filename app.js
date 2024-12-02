@@ -1,10 +1,13 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
-import authRoutes from './routes/auth_routes';
-
+import authRoutes from './routes/auth_routes.js';
 
 const app = express();
+
+app.use(bodyParser.json());
+
+app.use('/auth', authRoutes);
 
 mongoose.connect(process.env.MongoUrl).then((result) => {
     app.listen(8000);

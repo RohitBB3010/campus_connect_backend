@@ -18,4 +18,6 @@ const MemberSchema = new mongoose.Schema({
     ],
 }, { timestamps : true });
 
-exports.module = mongoose.model('Member', MemberSchema);
+const Member = mongoose.model('Member', MemberSchema);
+
+export default Member;
