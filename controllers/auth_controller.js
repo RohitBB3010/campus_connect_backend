@@ -5,20 +5,23 @@ export const checkUserExists = async (req, res, next) => {
 
     try{
 
+        console.log("api reached");
+        
         const memberEmail = req.query.email;
         const errors = validationResult(req);
 
         if(!errors.isEmpty()){
             return res.status(422).json({
-                "error" : "Please enter a valid email"
+                "error" : "Please enter a valid email",
+                errors : errors.array()
             });
         }
 
         const member = await Member.findOne({emailId : memberEmail });
 
         if(!member){
-            return res.status(200).json({
-                "message" : "No committee found"
+            return res.status(404).json({
+                "message" : "No member found for this email address"
             });
         }
 
@@ -34,7 +37,7 @@ export const checkUserExists = async (req, res, next) => {
     }
 }
 
-export const addMember = async (req, res, next) => {
+export const signUpMember = async (req, res, next) => {
     
     try{
 
@@ -43,7 +46,7 @@ export const addMember = async (req, res, next) => {
         if(!errors.isEmpty()){
             return res.status(422).json({
                 message : "Encountered error with input",
-                errors : errors
+                errors : errors.array()
             });
         }
 
@@ -52,10 +55,8 @@ export const addMember = async (req, res, next) => {
 
         const memberExist = await Member.findOne({emailId : email});
 
-        console.log(memberExist);
-
         if(memberExist != null){
-            return res.status(422).json({
+            return res.status(409).json({
                 message : "A member with this email already exists"
             });
         }
