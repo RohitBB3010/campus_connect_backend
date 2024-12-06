@@ -5,14 +5,14 @@ export const checkUserExists = async (req, res, next) => {
 
     try{
 
-        console.log("api reached");
-        
+        console.log("Reached req");
+
         const memberEmail = req.query.email;
         const errors = validationResult(req);
 
         if(!errors.isEmpty()){
             return res.status(422).json({
-                "error" : "Please enter a valid email",
+                "message" : "Please enter a valid email",
                 errors : errors.array()
             });
         }
@@ -26,7 +26,7 @@ export const checkUserExists = async (req, res, next) => {
         }
 
         return res.status(200).json({
-            "message" : "Member found",
+            "message" : "Member exists!!",
             "member" : member
         });
     } catch (err) {
@@ -40,6 +40,8 @@ export const checkUserExists = async (req, res, next) => {
 export const signUpMember = async (req, res, next) => {
     
     try{
+
+        console.log("Inside signup");
 
         const errors = validationResult(req);
 
