@@ -702,133 +702,18 @@ export const updateMembersWithCommittees = async () => {
     }
 };
 
-// export const memToCom = async (req, res, next) => {
-//   try {
-//       // Step 1: Fetch all member names from committees
-//       const auth = await Committee.find().populate('authorities.memberId');
-//       const memberNames = auth.flatMap(committee =>
-//           committee.authorities.map(authority => authority.memberId?.name).filter(name => name)
-//       );
-
-//       // Step 2: Fetch all members excluding those in memberNames
-//       const excludedMemberIds = await Member.find({ name: { $in: memberNames } }, "_id");
-//       const excludedIdsSet = new Set(excludedMemberIds.map(member => member._id.toString()));
-
-//       const remainingMembers = await Member.find(
-//           { _id: { $nin: Array.from(excludedIdsSet) } }, // Exclude members by _id
-//           "_id" // Fetch only _id
-//       );
-
-//       if (remainingMembers.length < 42) {
-//           return res.status(400).json({
-//               message: "Not enough members available to select 42 unique IDs."
-//           });
-//       }
-
-//       // Step 3: Randomly select 42 unique members
-//       const shuffled = remainingMembers.sort(() => 0.5 - Math.random());
-//       const selectedMembers = shuffled.slice(0, 42).map(member => member._id.toString());
-
-//       // Step 4: Initialize committee assignments
-//       const committeeAssignments = {
-//           0: [],
-//           1: [],
-//           2: [],
-//           3: []
-//       };
-
-//       // Assign the first 4 members to 3 completely different committees each
-//       for (let i = 0; i < 4; i++) {
-//           const committees = [0, 1, 2, 3].sort(() => 0.5 - Math.random()).slice(0, 3); // Random 3 committees
-//           for (const committee of committees) {
-//               committeeAssignments[committee].push(selectedMembers[i]);
-//           }
-//       }
-
-//       // Assign the next 10 members to 2 different committees each
-//       for (let i = 4; i < 14; i++) {
-//           const committees = [0, 1, 2, 3].sort(() => 0.5 - Math.random()).slice(0, 2); // Random 2 committees
-//           for (const committee of committees) {
-//               committeeAssignments[committee].push(selectedMembers[i]);
-//           }
-//       }
-
-//       // Assign the remaining members to 1 committee each
-//       for (let i = 14; i < 42; i++) {
-//           const committee = [0, 1, 2, 3].sort(() => 0.5 - Math.random())[0]; // Random 1 committee
-//           committeeAssignments[committee].push(selectedMembers[i]);
-//       }
-
-//       // Step 5: Update Committees in MongoDB
-//       const committees = await Committee.find({}, "_id name");
-//       const committeeIds = committees.map(committee => committee._id.toString());
-
-//       for (const [index, memberIds] of Object.entries(committeeAssignments)) {
-//           const committeeId = committeeIds[index]; // Map index to actual committee _id
-
-//           // Add member IDs to 'members' and 'authorities'
-//           await Committee.findByIdAndUpdate(
-//               committeeId,
-//               {
-//                   $addToSet: { // Ensures no duplicates
-//                       members: { $each: memberIds },
-//                       authorities: memberIds.map(memberId => ({ memberId }))
-//                   }
-//               },
-//               { new: true }
-//           );
-//       }
-
-//       // Step 6: Update Members in MongoDB
-//       for (const memberId of selectedMembers) {
-//           const assignedCommittees = [];
-//           for (const [index, memberIds] of Object.entries(committeeAssignments)) {
-//               if (memberIds.includes(memberId)) {
-//                   const committee = committees[index];
-//                   assignedCommittees.push({
-//                       committee_doc: committee._id,
-//                       committee_name: committee.name,
-//                       role: "Member" // Assuming role is 'Member'; adjust if needed
-//                   });
-//               }
-//           }
-
-//           // Update member's committees field
-//           await Member.findByIdAndUpdate(
-//               memberId,
-//               { $addToSet: { committees: { $each: assignedCommittees } } }, // Avoid duplicates
-//               { new: true }
-//           );
-//       }
-
-//       return res.status(200).json({
-//           message: "All good. Committees and members have been updated.",
-//           committeeAssignments
-//       });
-//   } catch (error) {
-//       console.error("Error in memToCom:", error);
-//       return res.status(500).json({
-//           message: "Something went wrong.",
-//           error: error.message
-//       });
-//   }
-// };
-
-
 export const memToCom = async (req, res, next) => {
   try {
-      // Step 1: Fetch all committees with their current members
+
       const committees = await Committee.find().populate('members');
-      const targetCount = 15; // Desired number of members per committee
+      const targetCount = 15; 
+      const overpopulated = [];
+      const underpopulated = [];
+      const excessMembers = []; 
+      const allMembersSet = new Set();
 
-      const overpopulated = []; // Committees with more than 15 members
-      const underpopulated = []; // Committees with less than 15 members
-      const excessMembers = []; // Members to redistribute
-      const allMembersSet = new Set(); // To avoid duplicate assignments
-
-      // Step 2: Classify committees and collect excess members
       for (const committee of committees) {
-          committee.members.forEach(member => allMembersSet.add(member._id.toString())); // Track existing members
+          committee.members.forEach(member => allMembersSet.add(member._id.toString()));
           if (committee.members.length > targetCount) {
               overpopulated.push({
                   committeeId: committee._id,
@@ -845,23 +730,22 @@ export const memToCom = async (req, res, next) => {
           }
       }
 
-      // Step 3: Fill underpopulated committees
       for (const underpopulatedCommittee of underpopulated) {
           const { committeeId, currentCount } = underpopulatedCommittee;
           const membersNeeded = targetCount - currentCount;
 
           const newMembers = [];
           while (newMembers.length < membersNeeded && excessMembers.length > 0) {
-              const memberId = excessMembers.pop(); // Get an excess member
-              newMembers.push(memberId); // Add to the current committee
-              allMembersSet.add(memberId); // Track member usage
+              const memberId = excessMembers.pop(); 
+              newMembers.push(memberId); 
+              allMembersSet.add(memberId); 
           }
 
           if (newMembers.length < membersNeeded) {
-              // Fetch additional members from the database to fill the gap
+
               const remainingNeeded = membersNeeded - newMembers.length;
               const additionalMembers = await Member.find({
-                  _id: { $nin: Array.from(allMembersSet) } // Avoid duplicates
+                  _id: { $nin: Array.from(allMembersSet) }
               })
                   .limit(remainingNeeded)
                   .select('_id');
@@ -870,7 +754,6 @@ export const memToCom = async (req, res, next) => {
               additionalMembers.forEach(member => allMembersSet.add(member._id.toString()));
           }
 
-          // Update the committee with new members
           await Committee.findByIdAndUpdate(
               committeeId,
               { $addToSet: { members: { $each: newMembers } } },
@@ -878,7 +761,6 @@ export const memToCom = async (req, res, next) => {
           );
       }
 
-      // Step 4: Remove excess members from overpopulated committees
       for (const overpopulatedCommittee of overpopulated) {
           const { committeeId, extraMembers } = overpopulatedCommittee;
 
