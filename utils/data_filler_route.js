@@ -1,14 +1,18 @@
 import { Router } from 'express';
-import { addCommittees, updateMembersWithCommittees, userFiller, memToCom} from './data_filler_controller.js';
+import {userFiller, populateCommittees, updateUserCommittees, assignMembersToCommittees, updateUsersMembers, deleteExtraComms} from './data_filler_controller.js';
 
 const router = Router();
 
 router.get('/adding-users', userFiller);
 
-router.get('/add-Committees', addCommittees);
+router.get('/adding-Committees', populateCommittees);
 
-router.get('/update-users', updateMembersWithCommittees);
+router.get('/update-user-committees', updateUserCommittees);
 
-router.get('/addingMemToCom', memToCom);
+router.get('/adding-user-committees', assignMembersToCommittees)
+
+router.get('/abc', updateUsersMembers);
+
+router.put('/delete', deleteExtraComms);
 
 export default router;

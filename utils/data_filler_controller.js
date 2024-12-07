@@ -611,179 +611,281 @@ export const userFiller = async (req, res, next) => {
       await user.save();
     }
 
+    for(const item of additionalMembers){
+      const user = User({
+        name : item.name,
+        emailId : item.emailId,
+        committees : [],
+        imageUrl : "  "
+      });
+
+      await user.save();
+    }
+
+    for(const item of additional2){
+      const user = User({
+        name : item.name,
+        emailId : item.emailId,
+        committees : [],
+        imageUrl : "  "
+      });
+
+      await user.save();
+    }
+
     return res.status(200).json({
         message : "Out of loop",
     });
 };
 
-export const addCommittees = async (req, res, next) => {
+export const populateCommittees = async () => {
+  try {
+      // Fetch all users
+      const users = await User.find();
 
-    const id1 = await Member.findOne({ name: "Amir El-Sayed" }, { _id: 1 });
-    const id2 = await Member.findOne({ name: "Mohammed Faisal" }, { _id: 1 });
-    const id3 = await Member.findOne({ name: "Emma Thompson" }, { _id: 1 });
-    const id4 = await Member.findOne({ name: "Lucas Martinez" }, { _id: 1 });
-    const id5 = await Member.findOne({ name: "Liam Davis" }, { _id: 1 });
-    const id6 = await Member.findOne({ name: "Avi Verma" }, { _id: 1 });
+      if (users.length < 30) {
+          throw new Error("Not enough users in the database. At least 30 are required.");
+      }
 
-    const ids = [id1, id2, id3, id4, id5, id6];
+      // Shuffle the users array to randomize selection
+      const shuffledUsers = users.sort(() => 0.5 - Math.random());
+      
+      // Select the first 30 users
+      const selectedUsers = shuffledUsers.slice(0, 30);
 
-    const committee = new Committee({
-        name : "Unstop Igniters Club",
-        members : [],
-        authorities : [
-            {
-                position : "Head",
-                memberId : id1,
-            },
-            {
-                position : "Co-Head",
-                memberId : id2,
-            },
-            {
-                position : "Public Relations Lead",
-                memberId : id3,
-            },
-            {
-                position : "Sponsorship Lead",
-                memberId : id4,
-            },
-            {
-                position : "Tech Lead",
-                memberId : id5,
-            },
-            {
-                position : "Events Head",
-                memberId : id6,
-            },
-        ],
-        events : [],
-        announcements : []
-    });
+      // Define the committee names
+      const committeeNames = [
+          "Computer Society Of India",
+          "Google Developers Student's Club",
+          "Association of Computer Machinery",
+          "Unstop Igniters Club",
+          "Student Council"
+      ];
 
-    console.log(ids);
+      // Define roles
+      const roles = ["Lead", "Co-Lead", "Publicity Head", "Sponsorship Head", "Technical Head", "Events Head"];
 
-    await committee.save();
+      // Create committees
+      const committees = committeeNames.map((name, index) => {
+          // Assign roles to random users
+          const authorities = roles.map((role, roleIndex) => {
+              return {
+                  position: role,
+                  memberId: selectedUsers[(index * roles.length + roleIndex) % selectedUsers.length]._id
+              };
+          });
 
-    return res.status(200).json({
-        "message" : "Done",
-        committee : committee
-    });
-}
+          return {
+              name,
+              authorities,
+              members: [],
+              events: [],
+              announcements: [],
+              imageUrl: ""
+          };
+      });
 
-export const updateMembersWithCommittees = async () => {
-    try {
-        // Step 1: Fetch all committees
-        const committees = await Committee.find().populate('authorities.memberId');  // Populate memberId in authorities
+      // Insert committees into the database
+      await Committee.insertMany(committees);
 
-        for (const committee of committees) {
-            // Step 2: For each committee, iterate through the authorities array
-            for (const authority of committee.authorities) {
-                // Step 3: Extract the memberId and committee details
-                const memberId = authority.memberId._id;
-                const committeeDetails = {
-                    committee_doc: committee._id,
-                    committee_name: committee.name,
-                    role: authority.position
-                };
-
-                // Step 4: Find the member and update their committees field
-                const updatedMember = await Member.findOneAndUpdate(
-                    { _id: memberId }, // Match the member by _id
-                    { $push: { committees: committeeDetails } }, // Add the committeeDetails to the committees array
-                    { new: true } // Return the updated member document
-                );
-
-                if (!updatedMember) {
-                    console.log(`Member with ID ${memberId} not found.`);
-                } else {
-                    console.log(`Updated member: ${updatedMember.name} with new committee: ${committee.name}`);
-                }
-            }
-        }
-
-        console.log("Members have been updated with committees and authorities.");
-    } catch (error) {
-        console.error("Error during updating members:", error);
-    }
+      console.log("Committees populated successfully.");
+  } catch (error) {
+      console.error("Error populating committees:", error);
+  }
 };
 
-export const memToCom = async (req, res, next) => {
+export const updateUserCommittees = async () => {
   try {
+      // Fetch all committees
+      const committees = await Committee.find();
 
-      const committees = await Committee.find().populate('members');
-      const targetCount = 15; 
-      const overpopulated = [];
-      const underpopulated = [];
-      const excessMembers = []; 
-      const allMembersSet = new Set();
-
+      // Update users' committee information
       for (const committee of committees) {
-          committee.members.forEach(member => allMembersSet.add(member._id.toString()));
-          if (committee.members.length > targetCount) {
-              overpopulated.push({
-                  committeeId: committee._id,
-                  extraMembers: committee.members.slice(targetCount).map(member => member._id)
-              });
-              excessMembers.push(
-                  ...committee.members.slice(targetCount).map(member => member._id.toString())
+          for (const authority of committee.authorities) {
+              await User.findByIdAndUpdate(
+                  authority.memberId,
+                  {
+                      $push: {
+                          committees: {
+                              position: authority.position,
+                              committee_doc: committee._id,
+                              committee_name: committee.name
+                          }
+                      }
+                  }
               );
-          } else if (committee.members.length < targetCount) {
-              underpopulated.push({
-                  committeeId: committee._id,
-                  currentCount: committee.members.length
-              });
           }
       }
 
-      for (const underpopulatedCommittee of underpopulated) {
-          const { committeeId, currentCount } = underpopulatedCommittee;
-          const membersNeeded = targetCount - currentCount;
-
-          const newMembers = [];
-          while (newMembers.length < membersNeeded && excessMembers.length > 0) {
-              const memberId = excessMembers.pop(); 
-              newMembers.push(memberId); 
-              allMembersSet.add(memberId); 
-          }
-
-          if (newMembers.length < membersNeeded) {
-
-              const remainingNeeded = membersNeeded - newMembers.length;
-              const additionalMembers = await Member.find({
-                  _id: { $nin: Array.from(allMembersSet) }
-              })
-                  .limit(remainingNeeded)
-                  .select('_id');
-
-              newMembers.push(...additionalMembers.map(member => member._id.toString()));
-              additionalMembers.forEach(member => allMembersSet.add(member._id.toString()));
-          }
-
-          await Committee.findByIdAndUpdate(
-              committeeId,
-              { $addToSet: { members: { $each: newMembers } } },
-              { new: true }
-          );
-      }
-
-      for (const overpopulatedCommittee of overpopulated) {
-          const { committeeId, extraMembers } = overpopulatedCommittee;
-
-          await Committee.findByIdAndUpdate(
-              committeeId,
-              { $pull: { members: { $in: extraMembers } } },
-              { new: true }
-          );
-      }
-
-      return res.status(200).json({
-          message: "Committees balanced to have exactly 15 members each."
-      });
+      console.log("User committee information updated successfully.");
   } catch (error) {
-      console.error("Error balancing committees:", error);
-      return res.status(500).json({
-          message: "Failed to balance committees.",
-          error: error.message
+      console.error("Error updating user committees:", error);
+  }
+};
+
+
+export const assignMembersToCommittees = async () => {
+  try {
+    // Fetch all committees and users
+    const committees = await Committee.find();
+    const users = await User.find();
+
+    // Filter out users already holding an authority position in any committe
+    const usersNotInAuthorities = users.filter(user => {
+      return !committees.some(committee =>
+        committee.authorities.some(authority =>
+          authority.memberId.toString() === user._id.toString()
+        )
+      );
+    });
+
+    // Randomize the filtered users
+    const shuffledUsers = usersNotInAuthorities.sort(() => Math.random() - 0.5);
+
+    // Take the first 75 users
+    const selectedUsers = shuffledUsers.slice(0, 75);
+
+    // Distribute users evenly across 5 committees
+    const usersPerCommittee = Math.floor(selectedUsers.length / committees.length);
+    const remainingUsers = selectedUsers.length % committees.length;
+
+    // Prepare bulk operations for MongoDB updates
+    const bulkCommitteeOps = [];
+    const bulkUserOps = [];
+
+    // Distribute users to committees
+    let userIndex = 0;
+    for (const committee of committees) {
+      const membersToAdd = [];
+      const membersForThisCommittee = [];
+
+      // Add users to the committee's members
+      for (let i = 0; i < usersPerCommittee; i++) {
+        if (selectedUsers[userIndex]) {
+          membersToAdd.push(selectedUsers[userIndex]._id);
+          membersForThisCommittee.push({
+            committee_doc: committee._id,
+            committee_name: committee.name,
+            position: "Member"
+          });
+          userIndex++;
+        }
+      }
+
+      // Add remaining users to the first committees (if any)
+      if (remainingUsers > 0) {
+        if (selectedUsers[userIndex]) {
+          membersToAdd.push(selectedUsers[userIndex]._id);
+          membersForThisCommittee.push({
+            committee_doc: committee._id,
+            committee_name: committee.name,
+            position: "Member"
+          });
+          userIndex++;
+        }
+        remainingUsers--;
+      }
+
+      // Update the committee's members array
+      bulkCommitteeOps.push({
+        updateOne: {
+          filter: { _id: committee._id },
+          update: { $push: { members: { $each: membersToAdd } } }
+        }
       });
+
+      // Update each user's committees array
+      for (const user of membersForThisCommittee) {
+        bulkUserOps.push({
+          updateOne: {
+            filter: { _id: user._id },
+            update: {
+              $push: {
+                committees: {
+                  committee_doc: user.committee_doc,
+                  committee_name: user.committee_name,
+                  position: user.position
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Execute the bulk write operations for both committees and users
+    if (bulkCommitteeOps.length > 0) {
+      await Committee.bulkWrite(bulkCommitteeOps);
+    }
+
+    if (bulkUserOps.length > 0) {
+      await User.bulkWrite(bulkUserOps);
+    }
+
+    console.log("Members successfully assigned to committees.");
+  } catch (error) {
+    console.error("Error assigning members to committees:", error);
+  }
+};
+
+export const updateUsersMembers = async () => {
+  try {
+    // Fetch all committees and populate their members
+    const committees = await Committee.find().populate('members');
+    
+    // Prepare bulk write operations for updating users
+    const bulkUserOps = [];
+    
+    // Iterate through all committees
+    for (const committee of committees) {
+      // Iterate through each member of the committee
+      for (const member of committee.members) {
+        // Add a committe to the user's committees array if not already added
+        bulkUserOps.push({
+          updateOne: {
+            filter: { _id: member._id }, // Find user by ID
+            update: {
+              $addToSet: {  // $addToSet ensures no duplicates in the array
+                committees: {
+                  committee_doc: committee._id,  // Committee ObjectId
+                  committee_name: committee.name, // Committee name
+                  position: 'Member'  // User's position
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Execute the bulk operations to update the users
+    if (bulkUserOps.length > 0) {
+      await User.bulkWrite(bulkUserOps);
+      console.log("User committees updated successfully.");
+    } else {
+      console.log("No users to update.");
+    }
+  } catch (error) {
+    console.error("Error updating user committees:", error);
+  }
+};
+
+export const deleteExtraComms = async (req, res, next) => {
+  try {
+    // Remove null values from the committees array in User collection
+    const cleanedUsers = await User.updateMany(
+      { committees: { $in: [null] } }, // Match users with null in their committees array
+      { $pull: { committees: null } } // Remove all null values
+    );
+
+    return res.status(200).json({
+      message: "Null values removed successfully from committees array",
+      modifiedCount: cleanedUsers.modifiedCount
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "An error occurred while removing null values",
+      error: err.message
+    });
   }
 };

@@ -16,9 +16,20 @@ app.use('/data-filler', dataRoutes);
 app.use('/auth', authRoutes);
 app.use('/home', homeRoutes);
 
+app.use((req, res, next) => {
+    mongoose.connection.on('connected', () => {
+        console.log('MongoDB is connected');
+      });
+      
+      mongoose.connection.on('error', (error) => {
+        console.error('MongoDB connection error:', error);
+      });
+});
+
 mongoose.connect(process.env.MongoUrl).then((result) => {
     app.listen(8000);
     console.log("Connected to mongodb");
+
 }).catch(err => {
     console.log(err);
 });
