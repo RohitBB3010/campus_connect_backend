@@ -21,13 +21,32 @@ export const getMemberData = async (req, res, next) => {
             }
         });
 
-        console.log(filteredCommittees[0].authorities);
-
         return res.status(200).json({
             member : memberData,
             committees : filteredCommittees
         });
     } catch (err) {
         return res.status(500).json({message : "Some internal error occurred please retry after some time"});
+    }
+}
+
+export const modifyMemberName = async (req, res, next) => {
+
+    try{
+
+        const newName = req.body.name;
+        const memberId = req.body.memberId;
+
+        await Member.findByIdAndUpdate(memberId, {name : newName}, { new : true});
+
+        return res.status(200).json({
+            "mesage" : "Name Updated Successfully"
+        });
+
+    } catch (err) {
+
+        return res.status(500).json({
+            "message" : "Unexpected error occured, please try again after sometime"
+        });
     }
 }

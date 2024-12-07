@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { getMemberData } from '../controllers/home_controller.js';
+import { getMemberData, modifyMemberName } from '../controllers/home_controller.js';
 
 const router = Router();
 
-router.get('/getMemberData', getMemberData)
+router.get('/getHomePageData', getMemberData);
+
+router.put('/modifyUser', modifyMemberName);
 
 export default router;
