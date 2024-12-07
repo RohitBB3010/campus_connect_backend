@@ -600,11 +600,12 @@ export const userFiller = async (req, res, next) => {
             }    
     ]
 
-    for(const item of additional2){
+    for(const item of userObjects){
       const user = User({
         name : item.name,
         emailId : item.emailId,
-        committees : []
+        committees : [],
+        imageUrl : "  "
       });
 
       await user.save();
