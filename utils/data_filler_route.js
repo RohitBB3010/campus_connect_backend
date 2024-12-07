@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { addCommittees, updateMembersWithCommittees, memberFiller, memToCom} from './data_filler_controller.js';
+import { addCommittees, updateMembersWithCommittees, userFiller, memToCom} from './data_filler_controller.js';
 
 const router = Router();
 
-router.get('/adding-members', memberFiller);
+router.get('/adding-members', userFiller);
 
 router.get('/add-Committees', addCommittees);
 

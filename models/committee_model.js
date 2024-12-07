@@ -9,7 +9,6 @@ const CommitteeSchema = mongoose.Schema({
         {
             position : { type : String, required : true},
             memberId : { type : mongoose.Schema.Types.ObjectId, ref : 'Member', required : true},
-
         }
     ],
     members : [

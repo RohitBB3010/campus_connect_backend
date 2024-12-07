@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import authRoutes from './routes/auth_routes.js';
 import homeRoutes from './routes/home_routes.js';
+import dataRoutes from './utils/data_filler_route.js';
 import cors from 'cors';
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
+app.use('/data-filler', dataRoutes);
 app.use('/auth', authRoutes);
 app.use('/home', homeRoutes);
 

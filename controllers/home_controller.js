@@ -1,4 +1,4 @@
-import Member from "../models/member_model.js";
+import Member from "../models/user_model.js";
 import Committee from "../models/committee_model.js";
 
 export const getMemberData = async (req, res, next) => {

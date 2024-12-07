@@ -1,10 +1,11 @@
 import Committee from '../models/committee_model.js';
-import Member from '../models/member_model.js';
+import User from '../models/user_model.js';
+import Member from '../models/user_model.js';
 import mongoose from 'mongoose';
 
-export const memberFiller = async (req, res, next) => {
+export const userFiller = async (req, res, next) => {
 
-    const memberObjects = [
+    const userObjects = [
         {
             name: "Aarav Sharma",
             emailId: "aarav.sharma@example.com",
@@ -596,18 +597,21 @@ export const memberFiller = async (req, res, next) => {
               name: 'Tanvi Deshmukh',
               emailId: 'tanvi.deshmukh@example.com',
               committees: []
-            }
-          
+            }    
     ]
 
-    const members = await Member.find();
-    let count = 0;
+    for(const item of additional2){
+      const user = User({
+        name : item.name,
+        emailId : item.emailId,
+        committees : []
+      });
 
-    const randomMembers = getRandomMembers(members, 36);
+      await user.save();
+    }
 
     return res.status(200).json({
         message : "Out of loop",
-        randomMembers : randomMembers
     });
 };
 

@@ -1,4 +1,4 @@
-import Member from '../models/member_model.js';
+import User from '../models/user_model.js';
 import { validationResult, check } from 'express-validator';
 
 export const checkUserExists = async (req, res, next) => {
