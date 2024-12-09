@@ -66,7 +66,8 @@ export const signUpUser = async (req, res, next) => {
         const user = User({
             name : name,
             emailId : email,
-            committees : []
+            committees : [],
+            imageUrl : " "
         });
 
         await user.save();
@@ -77,6 +78,9 @@ export const signUpUser = async (req, res, next) => {
         });
 
     } catch(err) {
-
+        return res.status(500).json({
+            message : "Some internal server occured",
+            error : err.message
+        })
     }
 }
