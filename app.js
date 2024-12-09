@@ -3,14 +3,21 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import authRoutes from './routes/auth_routes.js';
 import homeRoutes from './routes/home_routes.js';
-import dataRoutes from './utils/data_filler_route.js';
-import cors from 'cors';
+import dataRoutes from './data-filling/data_filler_route.js';
+import path from 'path';
+import parentDir from './utils/path_locals.js';
 
 const app = express();
 
-app.use(cors());
+app.use(bodyParser.urlencoded({extended : false}));
 
-app.use(bodyParser.json());
+app.use("/images", express.static(path.join(parentDir, 'images')));
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, PATCH');
+  next();
+})
 
 app.use('/data-filler', dataRoutes);
 app.use('/auth', authRoutes);
