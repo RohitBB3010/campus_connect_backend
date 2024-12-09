@@ -10,8 +10,7 @@ import parentDir from './utils/path_locals.js';
 const app = express();
 
 app.use(bodyParser.urlencoded({extended : false}));
-
-app.use("/images", express.static(path.join(parentDir, 'images')));
+app.use('/images', express.static(path.join(parentDir, 'images')));
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

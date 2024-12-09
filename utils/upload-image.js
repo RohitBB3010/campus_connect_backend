@@ -8,9 +8,6 @@ const diskStorage = multer.diskStorage({
     destination : (req, file, cb) => {
   
       const {type, id} = req.query;
-
-      console.log(type);
-      console.log(id);
   
       let folderPath = '';
       if(type === 'user'){
@@ -33,7 +30,6 @@ const diskStorage = multer.diskStorage({
       cb(null, folderPath);
     },
     filename : (req, file, cb) => {
-      console.log(req.query.id); 
       const extension = path.extname(file.originalname); 
       const fileName = `${req.query.id}${extension}`;
       cb(null, fileName);

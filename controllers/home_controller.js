@@ -10,14 +10,16 @@ export const fetchHomeData = async (req, res, next) => {
 
         const user = await User.findOne({emailId : emailId});
 
-        // console.log(user.committees);
-
         const transformedCommittees = user.committees.map(comm => ({
             committeeName: comm.committee_name,
             position: comm.position
         }));
-        
-        const responseUser = {...user._doc, committees : transformedCommittees};
+       
+        let responseUser = {...user._doc, committees : transformedCommittees};
+
+        if(!user.imageUrl || user.imageUrl.trim() === ''){
+            responseUser = {...responseUser, imageUrl : "images/user/constants/prof1.png"}; 
+        }
 
         return res.status(200).json({
             message : "Data pulled",
