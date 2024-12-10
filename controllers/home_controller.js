@@ -6,20 +6,28 @@ import path from 'path';
 export const fetchHomeData = async (req, res, next) => {
 
     try{
+
+        console.log("Fetch request recieved");
         const emailId = req.query.email;
 
         const user = await User.findOne({emailId : emailId});
 
-        const transformedCommittees = user.committees.map(comm => ({
-            committeeName: comm.committee_name,
-            position: comm.position
-        }));
-       
-        let responseUser = {...user._doc, committees : transformedCommittees};
+        let responseUser = user;
+
+        if(user.committees.length > 0){
+            const transformedCommittees = user.committees.map(comm => ({
+                committeeName: comm.committee_name,
+                position: comm.position
+            }));
+           
+            responseUser = {...user._doc, committees : transformedCommittees};
+        } 
 
         if(!user.imageUrl || user.imageUrl.trim() === ''){
-            responseUser = {...responseUser, imageUrl : "images/user/constants/prof1.png"}; 
+            responseUser = {...responseUser._doc, imageUrl : "images/user/constants/prof1.png"}; 
         }
+
+        console.log(responseUser);
 
         return res.status(200).json({
             message : "Data pulled",
