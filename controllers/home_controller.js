@@ -85,3 +85,29 @@ export const uploadUserProfile = async (req, res, next) => {
         });
     }
 }
+
+export const editProfile = async (req, res, next) => {
+
+    try{
+
+        console.log("Entered list");
+        
+        const newName = req.body.name;
+        const email = req.body.email;
+
+        console.log(newName);
+        console.log(email);
+
+        const updatedUser = await User.findOneAndUpdate({emailId : email}, { $set : { name : newName }}, { new : true });
+
+        return res.status(200).json({
+            message : "Name updated",
+            user : updatedUser
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message : "Some internal server occured",
+            error : err
+        });
+    }
+}

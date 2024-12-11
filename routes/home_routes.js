@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { fetchHomeData,uploadUserProfile } from '../controllers/home_controller.js';
-import { bodyParseMiddleware } from '../utils/upload-image.js';
+import { fetchHomeData,uploadUserProfile, editProfile } from '../controllers/home_controller.js';
 
 const router = Router();
 
 router.get('/fetch-home', fetchHomeData);
 
 router.post('/upload_image', uploadUserProfile);
+
+router.put('/edit-profile', editProfile);
 
 export default router;
