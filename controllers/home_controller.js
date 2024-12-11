@@ -12,6 +12,8 @@ export const fetchHomeData = async (req, res, next) => {
 
         const user = await User.findOne({emailId : emailId});
 
+        console.log(user);
+
         let responseUser = user;
 
         if(user.committees.length > 0){
@@ -19,15 +21,9 @@ export const fetchHomeData = async (req, res, next) => {
                 committeeName: comm.committee_name,
                 position: comm.position
             }));
-           
-            responseUser = {...user._doc, committees : transformedCommittees};
-        } 
 
-        if(!user.imageUrl || user.imageUrl.trim() === ''){
-            responseUser = {...responseUser._doc, imageUrl : "images/user/constants/prof1.png"}; 
+            responseUser = {...responseUser._doc, committees : transformedCommittees};
         }
-
-        console.log(responseUser);
 
         return res.status(200).json({
             message : "Data pulled",
@@ -45,7 +41,6 @@ export const fetchHomeData = async (req, res, next) => {
 export const uploadUserProfile = async (req, res, next) => {
 
     try{
-
         console.log('Received upload request');
 
         upload.single('image')(req, res, async(err) => {
@@ -53,7 +48,7 @@ export const uploadUserProfile = async (req, res, next) => {
             if(err){
                 return res.status(500).json({
                     message : "Error uploading image",
-                    error : err.message
+                    error : err.message,
                 });
             }
 
@@ -64,7 +59,11 @@ export const uploadUserProfile = async (req, res, next) => {
             }
 
             const id = req.query.id;
-            const objectId = new mongoose.Types.ObjectId(id)
+            const objectId = new mongoose.Types.ObjectId(id);
+
+            // -> This code was for removing the existing image but multer already replaces it
+            /* const user = await User.findById(objectId);
+            deletePathFromFile(user.imageUrl); */
 
             const relativePath = req.file.path.split('images')[1]; 
             const savedPath = path.join('images', relativePath).replace(/\\/g, '/'); 
@@ -79,6 +78,7 @@ export const uploadUserProfile = async (req, res, next) => {
 
     } catch (err) {
 
+        console.log("Here in catch block");
         return res.status(500).json({
             message : "Some internal server occured",
             error : err.message
