@@ -10,21 +10,22 @@ export const fetchHomeData = async (req, res, next) => {
         console.log("Fetch request recieved");
         const emailId = req.query.email;
 
-        const user = await User.findOne({emailId : emailId});
-
-        console.log(user);
+        const user = await User.findOne({emailId : emailId}).populate({path : 'committees.committee_doc'});
 
         let responseUser = user;
 
         if(user.committees.length > 0){
             const transformedCommittees = user.committees.map(comm => ({
                 committeeName: comm.committee_name,
-                position: comm.position
+                position: comm.position,
+                logoUrl : comm.committee_doc.imageUrl
             }));
 
             responseUser = {...responseUser._doc, committees : transformedCommittees};
         }
 
+        console.log(responseUser);
+        
         return res.status(200).json({
             message : "Data pulled",
             user : responseUser
@@ -39,66 +40,85 @@ export const fetchHomeData = async (req, res, next) => {
 }
 
 export const uploadUserProfile = async (req, res, next) => {
-
-    try{
-        console.log('Received upload request');
-
-        upload.single('image')(req, res, async(err) => {
-
-            if(err){
-                return res.status(500).json({
-                    message : "Error uploading image",
-                    error : err.message,
-                });
-            }
-
-            if(!req.file){
-                return res.status(400).json({
-                    message : "No file hidden"
-                });
-            }
-
-            const id = req.query.id;
-            const objectId = new mongoose.Types.ObjectId(id);
-
-            // -> This code was for removing the existing image but multer already replaces it
-            /* const user = await User.findById(objectId);
-            deletePathFromFile(user.imageUrl); */
-
-            const relativePath = req.file.path.split('images')[1]; 
-            const savedPath = path.join('images', relativePath).replace(/\\/g, '/'); 
-
-            await User.findOneAndUpdate(objectId, {$set : { imageUrl : savedPath}});
-
-            return res.status(200).json({
-                message : 'Profile uploaded',
-                filePath : savedPath
-            })
+    try {
+      console.log('Received upload request');
+  
+      await new Promise((resolve, reject) => {
+        upload.single('image')(req, res, (err) => {
+          if (err) {
+            return reject(err); 
+          }
+          resolve();
         });
+      });
+  
 
+      console.log("Multer middleware completed");
+  
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+        });
+      }
+  
+      console.log("File uploaded successfully");
+  
+      const id = req.query.id;
+      const objectId = new mongoose.Types.ObjectId(id);
+  
+      const relativePath = req.file.path.split('images')[1];
+      const savedPath = path.join('images', relativePath).replace(/\\/g, '/');
+
+      const updatedUser = await User.findOneAndUpdate(
+         objectId,
+        { $set: { imageUrl : savedPath } },
+        { new: true } 
+      );
+
+  
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      console.log(savedPath);
+
+      return res.status(200).json({
+        message: 'Profile uploaded successfully',
+        filePath: savedPath,
+      });
     } catch (err) {
-
-        console.log("Here in catch block");
-        return res.status(500).json({
-            message : "Some internal server occured",
-            error : err.message
-        });
+      console.error("Error in uploadUserProfile:", err.message);
+      return res.status(500).json({
+        message: "Internal server error occurred",
+        error: err.message,
+      });
     }
-}
+};
 
 export const editProfile = async (req, res, next) => {
 
     try{
 
         console.log("Entered list");
-        
+
         const newName = req.body.name;
         const email = req.body.email;
+        const setImageNull = req.body.setImageNull;
 
-        console.log(newName);
-        console.log(email);
+        console.log("Newname is :" + newName);
+        console.log('Set image null is :' + setImageNull);
 
-        const updatedUser = await User.findOneAndUpdate({emailId : email}, { $set : { name : newName }}, { new : true });
+        let updatedUser;
+
+        if(setImageNull == true){
+            updatedUser = await User.findOneAndUpdate({emailId : email}, { $set : { name : newName, imageUrl : null }}, { new : true });
+            console.log(updatedUser);
+        } else {
+            updatedUser = await User.findOneAndUpdate({emailId : email}, { $set : { name : newName}}, { new : true });
+        }
 
         return res.status(200).json({
             message : "Name updated",

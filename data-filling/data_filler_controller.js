@@ -605,7 +605,6 @@ export const userFiller = async (req, res, next) => {
         name : item.name,
         emailId : item.emailId,
         committees : [],
-        imageUrl : "  "
       });
 
       await user.save();
@@ -616,7 +615,6 @@ export const userFiller = async (req, res, next) => {
         name : item.name,
         emailId : item.emailId,
         committees : [],
-        imageUrl : "  "
       });
 
       await user.save();
@@ -627,7 +625,6 @@ export const userFiller = async (req, res, next) => {
         name : item.name,
         emailId : item.emailId,
         committees : [],
-        imageUrl : "  "
       });
 
       await user.save();

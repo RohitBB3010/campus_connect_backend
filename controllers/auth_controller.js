@@ -67,7 +67,6 @@ export const signUpUser = async (req, res, next) => {
             name : name,
             emailId : email,
             committees : [],
-            imageUrl : " "
         });
 
         await user.save();

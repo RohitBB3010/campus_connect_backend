@@ -37,7 +37,9 @@ const diskStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg') {
+
+  console.log('mimeType:' + file.mimetype);
+  if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg') {
     cb(null, true);
   } else {
     cb(new Error('Invalid file type. Only PNG and JPEG are allowed!'), false);
