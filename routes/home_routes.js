@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/fetch-home', fetchHomeData);
 
-router.post('/upload_image', uploadUserProfile);
+router.post('/upload-image', uploadUserProfile);
 
 router.put('/edit-profile', editProfile);
 
