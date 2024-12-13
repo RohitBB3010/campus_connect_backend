@@ -8,14 +8,13 @@ const CommitteeSchema = mongoose.Schema({
     authorities : [
         {
             position : { type : String, required : true},
-            memberId : { type : mongoose.Schema.Types.ObjectId, ref : 'Member', required : true},
-
+            memberId : { type : mongoose.Schema.Types.ObjectId, ref : 'User', required : true},
         }
     ],
     members : [
         {
             type : mongoose.Schema.Types.ObjectId,
-            ref : 'Member',
+            ref : 'User',
             required : true
         }
     ],
@@ -33,7 +32,11 @@ const CommitteeSchema = mongoose.Schema({
             imagePath : { type : String, required : false },
             author : { type : mongoose.Schema.Types.ObjectId, ref : 'Member', required : true }
         }
-    ]
+    ],
+    imageUrl : {
+        type : String,
+        required : false
+    }
 });
 
 const Committee = mongoose.model('Committee', CommitteeSchema);
