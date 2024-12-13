@@ -14,8 +14,10 @@ export const fetchHomeData = async (req, res, next) => {
 
         let responseUser = user;
 
+        console.log("User committees  are :" + user.committees);
         if(user.committees.length > 0){
             const transformedCommittees = user.committees.map(comm => ({
+                id : comm.committee_doc.id,
                 committeeName: comm.committee_name,
                 position: comm.position,
                 logoUrl : comm.committee_doc.imageUrl
@@ -127,7 +129,7 @@ export const editProfile = async (req, res, next) => {
     } catch (err) {
         return res.status(500).json({
             message : "Some internal server occured",
-            error : err
+            error : err.message
         });
     }
 }

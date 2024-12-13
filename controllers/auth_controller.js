@@ -32,7 +32,8 @@ export const checkUserExists = async (req, res, next) => {
     } catch (err) {
 
         return res.status(422).json({
-            "message" : "Some error occured. Please try again"
+            "message" : "Some error occured. Please try again",
+            error : err
         });
     }
 }

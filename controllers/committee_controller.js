@@ -4,32 +4,45 @@ import Committee from "../models/committee_model.js";
 
 export const fetchMembers = async (req, res, next) => {
 
-    let committeeId = req.query.commId;
+    try {
 
-    committeeId = new mongoose.Types.ObjectId(committeeId);
+        console.log("Request made at fetch members");
 
-    const committee = await Committee.findById(committeeId).populate({ path : 'authorities.memberId'}).populate({ path : 'members'});
+        let committeeId = req.query.commId;
 
-    console.log(committee.authorities[0].memberId);
+        committeeId = new mongoose.Types.ObjectId(committeeId);
 
-    let allMembers = committee.authorities.map((auth) => ({
-        name : auth.memberId.name,
-        email : auth.memberId.emailId,
-        position : auth.position,
-        imageUrl : auth.memberId.imageUrl
-    }));
+        
+        console.log(committeeId);
 
-    committee.members.forEach((member) => {
-        allMembers.push({
-            name : member.name,
-            email : member.emailId,
-            position : 'Member',
-            imageUrl : member.imageUrl
-        });
-    })
+        const committee = await Committee.findById(committeeId).populate({ path : 'authorities.memberId'}).populate({ path : 'members'});
+
+        console.log(committee);
+
+        let allMembers = committee.authorities.map((auth) => ({
+            name : auth.memberId.name,
+            email : auth.memberId.emailId,
+            position : auth.position,
+            imageUrl : auth.memberId.imageUrl
+        }));
+
+        committee.members.forEach((member) => {
+            allMembers.push({
+                name : member.name,
+                email : member.emailId,
+                position : 'Member',
+                imageUrl : member.imageUrl
+            });
+        })
 
     return res.status(200).json({
         members : allMembers,
         totalMembers : allMembers.length
     });
+    } catch (err) {
+        return res.status(500).json({
+            message : "Some internal server occured",
+            error : err.message
+        });
+    }
 } 
