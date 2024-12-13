@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import authRoutes from './routes/auth_routes.js';
 import homeRoutes from './routes/home_routes.js';
 import dataRoutes from './data-filling/data_filler_route.js';
+import committeeRoutes from './routes/committee_routes.js';
 import path from 'path';
 import parentDir from './utils/path_locals.js';
 
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 app.use('/data-filler', dataRoutes);
 app.use('/auth', authRoutes);
 app.use('/home', homeRoutes);
+app.use('/committee', committeeRoutes);
 
 app.use((req, res, next) => {
     mongoose.connection.on('connected', () => {
