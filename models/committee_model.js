@@ -27,10 +27,8 @@ const CommitteeSchema = mongoose.Schema({
     ],
     announcements : [
         {
-            title : { type : String, required : true },
-            content : { type : String, required : false },
-            imagePath : { type : String, required : false },
-            author : { type : mongoose.Schema.Types.ObjectId, ref : 'Member', required : true }
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'Announcement'
         }
     ],
     imageUrl : {

@@ -7,7 +7,11 @@ import parentDir from './path_locals.js';
 const diskStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const { type } = req.query;
+    if(!type){
+      return cb(new Error("file type not specified here first"));
+    }
 
+    console.log("Query is :" + req.query);
     let folderPath = '';
     if (type === 'user') {
       folderPath = path.join(parentDir, 'images', 'user');
@@ -16,7 +20,8 @@ const diskStorage = multer.diskStorage({
     } else if (type === 'events') {
       folderPath = path.join(parentDir, 'images', 'committees', 'events');
     } else if (type === 'announcements') {
-      folderPath = path.join(parentDir, 'images', 'committees', 'announcements');
+      const announcementId = req.query.annId;
+      folderPath = path.join(parentDir, 'images', 'committees', 'announcements', announcementId);
     } else {
       return cb(new Error('File type not specified'), false);
     }
@@ -31,7 +36,12 @@ const diskStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const extension = path.extname(file.originalname);
-    const fileName = req.query.id ? `${req.query.id}${extension}` : `default-${Date.now()}${extension}`;
+    let fileName;
+    const type = req.query.type;
+    if(type === 'announcements'){
+      fileName= req.file.originalname
+    }
+   fileName = req.query.id ? `${req.query.id}${extension}` : `default-${Date.now()}${extension}`;
     cb(null, fileName);
   },
 });
