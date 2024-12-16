@@ -58,7 +58,7 @@ export const addAnnoucementWithImage = async (req, res, next) => {
     try {
 
         const diskStorage = multer.diskStorage({
-            destination : async (req, file, cb) => {
+            destination: async (req, file, cb) => {
                 const folderPath = path.join(parentDir, 'images', 'committees', 'announcements');
 
                 try {
@@ -69,29 +69,28 @@ export const addAnnoucementWithImage = async (req, res, next) => {
                     cb(new Error('Failed to create directory'), false);
                 }
             },
-            filename : (req, file, cb) => {
+            filename: (req, file, cb) => {
                 const extension = path.extname(file.originalname);
                 const baseName = path.basename(file.originalname, extension);
                 const fileName = `${baseName}-${Date.now()}${extension}`;
                 cb(null, fileName);
             }
         });
-        
+
         const fileFilter = (req, file, cb) => {
             if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg') {
                 cb(null, true);
             } else {
                 cb(new Error('Invalid file type. Only PNG and JPEG are allowed!'), false);
             }
-        }
+        };
 
         const upload = multer({
-            storage : diskStorage,
-            fileFilter : fileFilter
+            storage: diskStorage,
+            fileFilter: fileFilter
         });
 
-
-        upload.fields([{ name : 'image'}])(req, res, async(err) => {
+        upload.fields([{ name: 'image' }])(req, res, async (err) => {
             if (err) {
                 return res.status(400).json({
                     message: "Multer error",
@@ -99,10 +98,13 @@ export const addAnnoucementWithImage = async (req, res, next) => {
                 });
             }
 
-            const filePaths = req.files.image.map(file => {
-                const relativePath = file.path.split('images')[1];
-                return path.join('images', relativePath).replace(/\\/g, '/');
-        });
+            let filePaths = [];
+            if (req.files.length > 0) {
+                filePaths = req.files.image.map(file => {
+                    const relativePath = file.path.split('images')[1];
+                    return path.join('images', relativePath).replace(/\\/g, '/');
+                });
+            }
 
             const title = req.body.title;
             const content = req.body.content;
@@ -113,37 +115,36 @@ export const addAnnoucementWithImage = async (req, res, next) => {
 
             console.log(userEmail);
 
-            const userId = await User.findOneAndUpdate({emailId : userEmail}, '_id');
+            const userId = await User.findOneAndUpdate({ emailId: userEmail }, '_id');
 
             const announcement = Announcement({
-                title : title,
-                content : content,
-                tag : tag,
-                visibility : visibility,
-                committee_id : committee_id,
-                author : userId,
-                images : filePaths
+                title: title,
+                content: content,
+                tag: tag,
+                visibility: visibility,
+                committee_id: committee_id,
+                author: userId,
+                images: filePaths
             });
 
             await announcement.save();
 
-            console.log(announcement._id);
-
-            await Committee.findOneAndUpdate({_id : committee_id}, { $push : { announcements : announcement._id}});
+            await Committee.findOneAndUpdate({ _id: committee_id }, { $push: { announcements: announcement._id } });
 
             return res.status(200).json({
-                message : "Added announcement",
-                announcement : announcement
+                message: "Added announcement",
+                announcement: announcement
             });
         });
-    
 
     } catch (err) {
 
         console.log(err);
-    return res.status(500).json({
-        message : "Error encountered",
-        error : err.message
-    });
+        return res.status(500).json({
+            message: "Error encountered",
+            error: err.message
+        });
     }
-}
+};
+
+
