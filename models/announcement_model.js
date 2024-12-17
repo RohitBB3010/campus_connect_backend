@@ -25,7 +25,14 @@ const AnnouncementSchema = mongoose.Schema({
     },
     tag : {
         type : String,
-        enum : ["Event", "Important", "Urgent", "Meeting", "Update", "Casual"],
+        enum : ["Event",
+      "Important",
+      "Urgent",
+      "Meeting",
+      "Update",
+      "Casual",
+      "Achievement",
+      "Feedback"],
         default : null
     },
     author : {

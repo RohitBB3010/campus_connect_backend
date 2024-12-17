@@ -12,17 +12,12 @@ export const fetchMembers = async (req, res, next) => {
 
     try {
 
-        console.log("Request made at fetch members");
 
         let committeeId = req.query.commId;
 
         committeeId = new mongoose.Types.ObjectId(committeeId);
 
-        console.log(committeeId);
-
         const committee = await Committee.findById(committeeId).populate({ path : 'authorities.memberId'}).populate({ path : 'members'});
-
-        console.log(committee);
 
         let allMembers = committee.authorities.map((auth) => ({
             name : auth.memberId.name,
@@ -30,8 +25,6 @@ export const fetchMembers = async (req, res, next) => {
             position : auth.position,
             imageUrl : auth.memberId.imageUrl ?? "images/constants/prof1.png"
         }));
-
-        console.log(allMembers[0].imageUrl);
 
         committee.members.forEach((member) => {
             allMembers.push({
@@ -113,8 +106,6 @@ export const addAnnoucementWithImage = async (req, res, next) => {
             const committee_id = req.body.committee_id;
             const userEmail = req.body.userEmail;
 
-            console.log(userEmail);
-
             const userId = await User.findOneAndUpdate({ emailId: userEmail }, '_id');
 
             const announcement = Announcement({
@@ -147,4 +138,41 @@ export const addAnnoucementWithImage = async (req, res, next) => {
     }
 };
 
+export const fetchAnnouncements = async (req, res, next) => {
 
+    try{
+
+        const commId = req.query.commId;
+        const userEmail = req.query.userEmail;
+
+        const committeesObj = await User.findOne({emailId : userEmail}).select('committees -_id');
+
+        const role = committeesObj.committees.find(committee => {
+            return committee.committee_doc.toString() === commId.toString();
+        }).position;
+
+        let visibilityStatus;
+        if(role === "Extended"){
+            visibilityStatus = ["Members+Extended"];
+        } else if(role === "Members"){
+            visibilityStatus = ["Members", "Members+Extended"];
+        } else{
+            visibilityStatus = ["Head", "Members", "Members+Extended"];
+        }
+
+        const announcements = await Announcement.find({committee_id : commId, visibility : {$in : visibilityStatus}
+        });
+
+        return res.status(200).json({
+            message : "Announcements fetched",
+            aanouncements : announcements
+        });
+
+
+    } catch (err) { 
+        return res.status(500).json({
+            message : "Error faced",
+            error : err.message
+        });
+    } 
+}

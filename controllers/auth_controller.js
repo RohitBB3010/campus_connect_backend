@@ -5,8 +5,6 @@ export const checkUserExists = async (req, res, next) => {
 
     try{
 
-        console.log("Reached req");
-
         const userEmail = req.query.email;
         const errors = validationResult(req);
 
@@ -41,8 +39,6 @@ export const checkUserExists = async (req, res, next) => {
 export const signUpUser = async (req, res, next) => {
     
     try{
-
-        console.log("Inside signup");
 
         const errors = validationResult(req);
 

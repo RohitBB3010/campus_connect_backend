@@ -7,14 +7,12 @@ export const fetchHomeData = async (req, res, next) => {
 
     try{
 
-        console.log("Fetch request recieved");
         const emailId = req.query.email;
 
         const user = await User.findOne({emailId : emailId}).populate({path : 'committees.committee_doc'});
 
         let responseUser = user;
 
-        console.log("User committees  are :" + user.committees);
         if(user.committees.length > 0){
             const transformedCommittees = user.committees.map(comm => ({
                 id : comm.committee_doc.id,
@@ -25,8 +23,6 @@ export const fetchHomeData = async (req, res, next) => {
 
             responseUser = {...responseUser._doc, committees : transformedCommittees};
         }
-
-        console.log(responseUser);
         
         return res.status(200).json({
             message : "Data pulled",
@@ -43,7 +39,6 @@ export const fetchHomeData = async (req, res, next) => {
 
 export const uploadUserProfile = async (req, res, next) => {
     try {
-      console.log('Received upload request');
   
       await new Promise((resolve, reject) => {
         upload.single('image')(req, res, (err) => {
@@ -54,16 +49,11 @@ export const uploadUserProfile = async (req, res, next) => {
         });
       });
   
-
-      console.log("Multer middleware completed");
-  
       if (!req.file) {
         return res.status(400).json({
           message: "No file uploaded",
         });
       }
-  
-      console.log("File uploaded successfully");
   
       const id = req.query.id;
       const objectId = new mongoose.Types.ObjectId(id);
@@ -85,8 +75,6 @@ export const uploadUserProfile = async (req, res, next) => {
         });
       }
 
-      console.log(savedPath);
-
       return res.status(200).json({
         message: 'Profile uploaded successfully',
         filePath: savedPath,
@@ -103,8 +91,6 @@ export const uploadUserProfile = async (req, res, next) => {
 export const editProfile = async (req, res, next) => {
 
     try{
-
-        console.log("Entered list");
 
         const newName = req.body.name;
         const email = req.body.email;
