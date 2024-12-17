@@ -161,11 +161,30 @@ export const fetchAnnouncements = async (req, res, next) => {
         }
 
         const announcements = await Announcement.find({committee_id : commId, visibility : {$in : visibilityStatus}
-        });
+        }).populate('committee_id', 'name -_id').populate('author', 'name -_id');
+
+        console.log(announcements);
+
+        const announcementsMod = [];
+        for(const ann of announcements){
+            console.log(ann.author.name);
+            const announcement = {
+                title : ann.title,
+                content : ann.content,
+                author : ann.author.name || 'Unknown author',
+                committee : ann.committee_id.name || 'Unknown committee',
+                images : ann.images,
+                tag : ann.tag,
+                visibility : ann.visibility
+            };
+            announcementsMod.push(announcement);
+        }
+
+        //console.log(announcementsMod);
 
         return res.status(200).json({
             message : "Announcements fetched",
-            aanouncements : announcements
+            announcements : announcementsMod
         });
 
 
