@@ -92,8 +92,9 @@ export const addAnnoucementWithImage = async (req, res, next) => {
             }
 
             let filePaths = [];
-            if (req.files.length > 0) {
-                filePaths = req.files.image.map(file => {
+            if (req.files['image'] && req.files['image'].length > 0) {
+                console.log(req.files.length);
+                filePaths = req.files['image'].map(file => {
                     const relativePath = file.path.split('images')[1];
                     return path.join('images', relativePath).replace(/\\/g, '/');
                 });
@@ -107,6 +108,8 @@ export const addAnnoucementWithImage = async (req, res, next) => {
             const userEmail = req.body.userEmail;
 
             const userId = await User.findOneAndUpdate({ emailId: userEmail }, '_id');
+
+            console.log(filePaths);
 
             const announcement = Announcement({
                 title: title,
@@ -142,6 +145,7 @@ export const fetchAnnouncements = async (req, res, next) => {
 
     try{
 
+        console.log("Fetching announcements");
         const commId = req.query.commId;
         const userEmail = req.query.userEmail;
 
@@ -161,7 +165,7 @@ export const fetchAnnouncements = async (req, res, next) => {
         }
 
         const announcements = await Announcement.find({committee_id : commId, visibility : {$in : visibilityStatus}
-        }).populate('committee_id', 'name -_id').populate('author', 'name -_id');
+        }).populate('committee_id', 'name -_id').populate('author', 'name imageUrl -_id');
 
         console.log(announcements);
 
@@ -171,10 +175,11 @@ export const fetchAnnouncements = async (req, res, next) => {
             const announcement = {
                 title : ann.title,
                 content : ann.content,
-                author : ann.author.name || 'Unknown author',
-                committee : ann.committee_id.name || 'Unknown committee',
+                author : ann.author.name,
+                committee : ann.committee_id.name,
                 images : ann.images,
                 tag : ann.tag,
+                authorImage : ann.imageUrl || 'images/constants/prof2.png',
                 visibility : ann.visibility
             };
             announcementsMod.push(announcement);
@@ -195,3 +200,7 @@ export const fetchAnnouncements = async (req, res, next) => {
         });
     } 
 }
+
+//For variables -> camelcase
+//for foldername, filenames and api -> always underscore
+//for async -> async await
