@@ -24,7 +24,7 @@ const eventModel = mongoose.Schema({
         ref : 'User',
         required : true
     },
-    committee_name : {
+    committee_id : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Committee',
         required : true
@@ -34,14 +34,6 @@ const eventModel = mongoose.Schema({
         required : true
     },
     end_time : {
-        type : Date,
-        required : true
-    },
-    registration_required : {
-        type : Boolean,
-        required : true
-    },
-    registration_deadline : {
         type : Date,
         required : true
     },
@@ -63,6 +55,6 @@ const eventModel = mongoose.Schema({
     }
 });
 
-const Event = mongoose.Schema('Event', eventModel);
+const Event = mongoose.model('Event', eventModel);
 
 export default Event;
