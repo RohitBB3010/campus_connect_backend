@@ -146,7 +146,6 @@ export const fetchAnnouncements = async (req, res, next) => {
 
     try{
 
-        console.log("Fetching announcements");
         const commId = req.query.commId;
         const userEmail = req.query.userEmail;
 
@@ -167,8 +166,6 @@ export const fetchAnnouncements = async (req, res, next) => {
 
         const announcements = await Announcement.find({committee_id : commId, visibility : {$in : visibilityStatus}
         }).populate('committee_id', 'name -_id').populate('author', 'name imageUrl -_id');
-
-        console.log(announcements);
 
         const announcementsMod = [];
         for(const ann of announcements){
@@ -252,9 +249,7 @@ export const addEvent = async (req, res, next) => {
                     const relativePath = file.path.split('images')[1];
                     return path.join('images', relativePath).replace(/\\/g, '/');
                 });
-            }
-
-            console.log(filePaths);
+            };
 
             const name = req.body.name;
             const description = req.body.description;
@@ -275,7 +270,6 @@ export const addEvent = async (req, res, next) => {
             const startTimeForm = new Date(startTime);
             const endTimeForm = new Date(endTime);
 
-            console.log(eligibility);
 
             const event = Event({
                 eventName : name,
@@ -294,6 +288,8 @@ export const addEvent = async (req, res, next) => {
 
             await event.save();
 
+            await Committee.findOneAndUpdate({_id : committeeId}, { $push : { events : event._id }});
+
             return res.status(200).json({
                 message : "Event added",
                 event : event
@@ -305,6 +301,48 @@ export const addEvent = async (req, res, next) => {
             message : "Error encountered",
             error : err.message
         });
+    }
+}
+
+export const fetchEvents = async (req, res, next) => {
+
+    try {
+        const committeeId = req.query.commId;
+
+        const events = await Event.find({committee_id : committeeId}).populate({ path : 'committee_id', select : 'name -_id' }).populate({ path : 'head', select : 'name emailId -_id' }).populate({ path : 'coHead', select : 'name emailId -_id' });
+
+        const eventsList = [];
+        for(const eventObj of events) {
+            const event = {
+                eventName : eventObj.eventName,
+                description : eventObj.description,
+                head : eventObj.head.name,
+                coHead : eventObj.coHead.name,
+                venue : eventObj.venue,
+                tag : eventObj.tag,
+                registrationLink : eventObj.registration_link,
+                startTime : eventObj.start_time,
+                endTime : eventObj.end_time,
+                images : eventObj.imageUrls,
+                eligibility : eventObj.eligibility,
+                committeeId : eventObj.committee_id.name,
+                headEmail : eventObj.head.emailId,
+                coHeadEmail : eventObj.coHead.emailId
+            };
+
+            eventsList.push(event);
+        }
+
+        return res.status(200).json({
+            message : "Events fetched",
+            events : eventsList
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            message : "Some internal server error occured",
+            error : err.message
+        })
     }
 }
 
