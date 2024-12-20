@@ -309,7 +309,7 @@ export const fetchEvents = async (req, res, next) => {
     try {
         const committeeId = req.query.commId;
 
-        const events = await Event.find({committee_id : committeeId}).populate({ path : 'committee_id', select : 'name -_id' }).populate({ path : 'head', select : 'name emailId -_id' }).populate({ path : 'coHead', select : 'name emailId -_id' });
+        const events = await Event.find({committee_id : committeeId}).populate({ path : 'committee_id', select : 'name -_id' }).populate({ path : 'head', select : 'name emailId -_id' }).populate({ path : 'coHead', select : 'name emailId -_id' }).sort({start_time : -1});
 
         const eventsList = [];
         for(const eventObj of events) {

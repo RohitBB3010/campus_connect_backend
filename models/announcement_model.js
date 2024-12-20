@@ -40,7 +40,7 @@ const AnnouncementSchema = mongoose.Schema({
         ref : 'User',
         required : true
     }
-});
+}, {timeStamps : true});
 
 const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 
