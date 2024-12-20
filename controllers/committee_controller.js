@@ -8,6 +8,7 @@ import multer from "multer";
 import path from 'path';
 import User from "../models/user_model.js";
 import Event from "../models/events_model.js";
+import { profile } from "console";
 
 export const fetchMembers = async (req, res, next) => {
 
@@ -270,7 +271,6 @@ export const addEvent = async (req, res, next) => {
             const startTimeForm = new Date(startTime);
             const endTimeForm = new Date(endTime);
 
-
             const event = Event({
                 eventName : name,
                 description : description,
@@ -309,7 +309,7 @@ export const fetchEvents = async (req, res, next) => {
     try {
         const committeeId = req.query.commId;
 
-        const events = await Event.find({committee_id : committeeId}).populate({ path : 'committee_id', select : 'name -_id' }).populate({ path : 'head', select : 'name emailId -_id' }).populate({ path : 'coHead', select : 'name emailId -_id' }).sort({start_time : -1});
+        const events = await Event.find({committee_id : committeeId}).populate({ path : 'committee_id', select : 'name -_id' }).populate({ path : 'head', select : 'name emailId -_id' }).populate({ path : 'coHead', select : 'name emailId -_id' }).sort({start_time : 1});
 
         const eventsList = [];
         for(const eventObj of events) {
@@ -343,6 +343,64 @@ export const fetchEvents = async (req, res, next) => {
             message : "Some internal server error occured",
             error : err.message
         })
+    }
+}
+
+export const fetchProfile = async (req, res, next) => {
+
+    try {
+
+    const userEmail = req.query.userEmail;
+    let committeeId = req.query.commId;
+    
+    const user = await User.findOne({emailId : userEmail});
+
+    const position = user.committees.find((committee) => {
+        return committee.committee_doc.toString() === committeeId.toString()
+    }).position;
+
+    const events = await Event.find({committee_id : committeeId, $or : [
+        { head : user._id}, {coHead : user._id}
+    ]});
+
+    const announcements = await Announcement.find({
+        committee_id : committeeId, author : user._id
+    });
+
+    const profileEvents = [];
+    for(const event of events){
+        const profileEvent = {
+            id : event.id,
+            title : event.eventName,
+            startDate : event.start_time,
+            endDate : event.end_time
+        }
+        profileEvents.push(profileEvent);
+    }
+    
+    const profileAnnouncements = [];
+    for(const announcement of announcements){
+        const profileAnnouncement = {
+            id : announcement._id,
+            title : announcement.title,
+            visibility : announcement.visibility
+        };
+        profileAnnouncements.push(profileAnnouncement);
+    }
+
+    return res.status(200).json({
+        name : user.name,
+        email : user.emailId,
+        position : position,
+        events : profileEvents,
+        announcements : profileAnnouncements
+    });
+
+    } catch (err) {
+        return res.status(500).json({
+            statusCode : err.statusCode,
+            message : err.message
+        });
     }
 }
 
