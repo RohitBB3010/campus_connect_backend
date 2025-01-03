@@ -43,7 +43,7 @@ const eventModel = mongoose.Schema({
     },
     registration_link : {
         type : String,
-        required : true
+        required : false
     },
     venue : {
         type : String,

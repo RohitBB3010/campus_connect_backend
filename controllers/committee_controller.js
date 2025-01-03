@@ -388,6 +388,8 @@ export const fetchProfile = async (req, res, next) => {
         profileAnnouncements.push(profileAnnouncement);
     }
 
+    console.log(profileAnnouncements);
+
     return res.status(200).json({
         name : user.name,
         email : user.emailId,

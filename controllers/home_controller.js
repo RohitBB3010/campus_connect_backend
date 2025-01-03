@@ -2,6 +2,32 @@ import mongoose, { mongo } from 'mongoose';
 import User from '../models/user_model.js';
 import { upload }  from '../utils/upload-image.js';
 import path from 'path';
+import Event from '../models/events_model.js';
+import Announcement from '../models/announcement_model.js';
+
+export const fetchBasicUserData = async (req, res, next) => {
+  try{
+
+    console.log("Request recieved");
+    const userEmail = req.query.userEmail;
+
+    const userData = await User.findOne({
+      emailId : userEmail
+    }).select('name imageUrl');
+
+    return res.status(200).json({
+      message : "Data fetched",
+      name : userData.name,
+      imageUrl : userData.imageUrl ?? 'images/constants/prof1.png'
+    });
+
+  } catch (err){
+    return res.status(500).json({
+      message : "Error fetching user data",
+      error : err.message
+    })
+  }
+}
 
 export const fetchHomeData = async (req, res, next) => {
 
@@ -118,4 +144,91 @@ export const editProfile = async (req, res, next) => {
             error : err.message
         });
     }
+}
+
+export const fetchHomeEvents = async (req, res, next) => {
+  try{
+
+    const userEmail = req.query.emailId;
+
+    const user = await User.findOne({ emailId : userEmail }).select('name emailId');
+
+    const currentDateTime = Date.now();
+
+    const events = await Event.find({ end_time : {$gt : currentDateTime }}).populate('committee_id').populate('head').populate('coHead').sort({ start_time : 1});
+
+    const eventsList = [];
+        for(const eventObj of events) {
+            const event = {
+                eventName : eventObj.eventName,
+                description : eventObj.description,
+                head : eventObj.head.name,
+                coHead : eventObj.coHead.name,
+                venue : eventObj.venue,
+                tag : eventObj.tag,
+                registrationLink : eventObj.registration_link,
+                startTime : eventObj.start_time,
+                endTime : eventObj.end_time,
+                images : eventObj.imageUrls,
+                eligibility : eventObj.eligibility,
+                committeeId : eventObj.committee_id.name,
+                headEmail : eventObj.head.emailId,
+                coHeadEmail : eventObj.coHead.emailId,
+                committeeName : eventObj.committee_id.name,
+            };
+
+            eventsList.push(event);
+        }
+
+        return res.status(200).json({
+          message : "Data fetched",
+          userName : user.name,
+          profileUrl : user.imageUrl ?? 'images/constants/prof2.png',
+          events : eventsList
+        });
+        
+
+  } catch (err){
+    return res.status(500).json({
+      message : "Some internal error occured",
+      error : err.message
+    });
+  }
+}
+
+export const fetchHomeAnnouncements = async (req, res, next) => {
+  try {
+
+    const userEmail = req.query.userEmail;
+
+    const announcementsData = await Announcement.find({
+      visibility : 'All'
+    }).populate({ path : 'committee_id', select : 'name'}).populate({ path : 'author', select : 'name imageUrl'});
+
+    const announcementsList = [];
+
+    for(const announcementObj of announcementsData){
+      const announcement = {
+        'title' : announcementObj.title,
+        'content' : announcementObj.content,
+        'tag' : announcementObj.tag,
+        'author' : announcementObj.author.name,
+        'authorImage' : announcementObj.author.imageUrl ?? 'images/consts/prof1.png',
+        'committeeName' : announcementObj.committee_id.name
+      };
+
+      announcementsList.push(announcement);
+    }
+
+    return res.status(200).json({
+      message : 'Announcements fetched',
+      announcements : announcementsList
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      message : "Some unexpected occurred",
+      error : err.message
+    });
+  }
 }
